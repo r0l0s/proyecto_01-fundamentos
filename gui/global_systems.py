@@ -25,7 +25,15 @@ equipoC = [C["jugador01"],C["jugador02"],C["jugador03"]]
 ###############################################################
 
 Players = []
+startingPlayer = None
+otherGuy = None
 
+
+def OtherPlayer(startingPlayer):
+    if startingPlayer == 0:
+        return 1
+    else:
+        return 0
 
 textInfo = """
     Tecnológico de Costa Rica 

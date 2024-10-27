@@ -1,40 +1,57 @@
+import time
 
 class Player:
-    def __init__(self, nombreJugador):
+    def __init__(self, playerName):
         
-        self.nombreJugador = nombreJugador
-        self.nombrePersonaje = None
-        self.personajeImage = None
-        self.equipo = None
-        self.puntaje = 0
-        self.lanzamientos = 3
+        self.playerName = playerName
+        self.characterName = None
+        self.characterImage = None
+        self.characterTeam = None
+        self.score = 0
+        self.shots = 3
+        self.missed_shots = 0
+        self.active_shot = False
 
+    def getPlayerName(self):
+        return self.playerName
 
-    def getName(self):
-        return self.nombreJugador
-    
-    def setPersonaje(self, nombre, imagen, equipo):
-        self.nombrePersonaje = nombre
-        self.personajeImage = imagen
-        self.equipo = equipo
+    def setCharacter(self, name, image, team):
+        self.characterName = name
+        self.characterImage = image
+        self.characterTeam = team
 
-    def getPersonaje(self, atributo):
-        if atributo == "nombre":
-            return self.nombrePersonaje
-        elif atributo == "imagen":
-            return self.personajeImage
-        elif atributo == "equipo":
-            return self.equipo
+    def getCharacter(self, atributo):
+        
+        if atributo == "name":
+            return self.characterName
+        elif atributo == "image":
+            return self.characterImage
+        elif atributo == "team":
+            return self.characterTeam
+        elif atributo == "all":
+            return (self.playerName,self.characterName, self.characterImage, self.characterTeam, self.score, self.shots)
         
     
-    def getPuntaje(self):
-        return self.puntaje
+    def getScore(self):
+        return self.score
     
-    def setPuntaje(self, nuevoPuntaje):
-        self.puntaje += nuevoPuntaje
+    def setScore(self, newScore):
+        self.score += newScore
 
-    def getLanzamientos(self):
-        return self.lanzamientos
+    def getShots(self):
+        return self.shots
     
-    def setLanzamientos(self):
-        self.lanzamientos -= 1
+    def removeShots(self):
+        self.shots -= 1
+
+    def getShotStatus(self):
+        return self.active_shot
+    
+    def setShotStatus(self, status):
+        self.active_shot = status
+
+    def getMissedShots(self):
+        return self.missed_shots
+    
+    def setMissedShots(self):
+        self.missed_shots += 1
