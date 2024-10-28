@@ -38,8 +38,78 @@ def TestWindow():
         print(cuba)
         print("sent")
 
-    ZonaA = Button(window, text="Anotacion: A", width=30, height=2, command= ZoneA) 
-    ZonaA.place(relx=0.5, rely=0.3, anchor="center")
+    ZonaA = Button(window, text="Zone A", width=30, height=2, command= ZoneA) 
+    ZonaA.place(relx=0.5, rely=0.2, anchor="center")
+
+
+    def ZoneB():
+        dataString = "ZB-3"
+        dataStringEncoded = dataString.encode('utf-8')
+        UDPServer.sendto(dataStringEncoded,cuba)
+        print(cuba)
+        print("sent")
+
+    ZonaB = Button(window, text="Zone B", width=30, height=2, command= ZoneB) 
+    ZonaB.place(relx=0.5, rely=0.3, anchor="center")
+
+    
+    def ZoneC():
+        dataString = "ZC-4"
+        dataStringEncoded = dataString.encode('utf-8')
+        UDPServer.sendto(dataStringEncoded,cuba)
+        print(cuba)
+        print("sent")
+
+    ZonaC = Button(window, text="Zone C", width=30, height=2, command= ZoneC) 
+    ZonaC.place(relx=0.5, rely=0.4, anchor="center")
+
+
+    def ZoneD():
+        dataString = "ZD-5"
+        dataStringEncoded = dataString.encode('utf-8')
+        UDPServer.sendto(dataStringEncoded,cuba)
+        print(cuba)
+        print("sent")
+
+    ZonaD = Button(window, text="Zone D", width=30, height=2, command= ZoneD) 
+    ZonaD.place(relx=0.5, rely=0.5, anchor="center")
+
+
+    def ZoneE():
+        dataString = "ZE-10"
+        dataStringEncoded = dataString.encode('utf-8')
+        UDPServer.sendto(dataStringEncoded,cuba)
+        print(cuba)
+        print("sent")
+
+    ZonaE = Button(window, text="Zone E", width=30, height=2, command= ZoneE) 
+    ZonaE.place(relx=0.5, rely=0.6, anchor="center")
+
+
+    def End():
+        dataString = "End"
+        dataStringEncoded = dataString.encode('utf-8')
+        UDPServer.sendto(dataStringEncoded,cuba)
+        print(cuba)
+        print("sent")
+
+    End = Button(window, text="EndShot", width=30, height=2, command= End) 
+    End.place(relx=0.5, rely=0.7, anchor="center")
+
+
+    def Switch():
+        dataString = "Switch"
+        dataStringEncoded = dataString.encode('utf-8')
+        UDPServer.sendto(dataStringEncoded,cuba)
+        print(cuba)
+        print("sent")
+
+    SwitchButton = Button(window, text="Switch", width=30, height=2, command= Switch) 
+    SwitchButton.place(relx=0.5, rely=0.8, anchor="center")
+
+
+#############################################################################################
+#############################################################################################
 
     def Communication():
         global carrot, cuba
@@ -81,5 +151,7 @@ def TestWindow():
     test.start()
     window.mainloop()
 
+#############################################################################################
+#############################################################################################
 
 TestWindow()
