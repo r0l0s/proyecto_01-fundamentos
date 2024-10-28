@@ -24,6 +24,16 @@ C = {
 equipoC = [C["jugador01"],C["jugador02"],C["jugador03"]]
 ###############################################################
 
+switchForm = "auto"
+
+backgroundMusic = None
+
+def changeSwitchForm(form):
+    global switchForm
+
+    switchForm = form
+    print(str(switchForm))
+
 Players = []
 startingPlayer = None
 otherGuy = None

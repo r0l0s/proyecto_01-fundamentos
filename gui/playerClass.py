@@ -11,6 +11,7 @@ class Player:
         self.shots = 3
         self.missed_shots = 0
         self.active_shot = False
+        self.background = None
 
     def getPlayerName(self):
         return self.playerName
@@ -55,3 +56,9 @@ class Player:
     
     def setMissedShots(self):
         self.missed_shots += 1
+
+    def getBackground(self):
+        return self.background
+    
+    def setBackground(self, color):
+        self.background = color

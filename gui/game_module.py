@@ -6,6 +6,9 @@ import playerClass
 import socket
 import random
 import threading
+import pygame
+
+pygame.mixer.init()
 
 serverAddress = ('192.168.100.7', 2222)
 bufferSize = 1024
@@ -124,21 +127,6 @@ def ChoosePlayer(playerindex):
     canvas.place(relx=0.5, rely=0.3, anchor="center")
     character = canvas.create_image(0,0, anchor="nw")
 
-    def change(value):
-        player_variables["character_index"] = int(value)
-
-    def potenciometro():
-
-        extra_window = Tk()
-        extra_window.title('señal')
-        extra_window.geometry('300x300')
-
-        #Slider
-        poten = Scale(extra_window, from_= 0, to= 2, command= lambda value: change(value))
-        poten.pack(fill='both', expand= True)
-
-    
-    #potenciometro()
     player_selection()
     
     
@@ -185,6 +173,7 @@ def InputWindow(jugador):
 # Esta es la ventana de configuración
 ##################################################################################
 def GameConfigWindow(OpenMain):
+    
     window = Tk()
     window.minsize(width= 800, height=700)
     window.title("Configuración de Juego")
@@ -199,23 +188,20 @@ def GameConfigWindow(OpenMain):
     ButtonTwo = Button(window, text="Dos Jugadores", width=30, height=2, command= lambda: SetGamePlayers(2, window))
     ButtonTwo.place(relx=0.5, rely=0.4, anchor="center")
 
-    ButtonThree = Button(window, text="Tres Jugadores", width=30, height=2, command= lambda: SetGamePlayers(3, window))
-    ButtonThree.place(relx=0.5, rely=0.5, anchor="center")
-    
+    ################################################################################################################
+
+    FormaCambio = Label(window, text="Forma de intercambio:")
+    FormaCambio.place(relx=0.5, rely=0.5, anchor="center")
+
+    ButtonAuto = Button(window, text="Automática", width=30, height=2, command= lambda: global_systems.changeSwitchForm("auto"))
+    ButtonAuto.place(relx=0.5, rely=0.6, anchor="center")
+
+    ButtonManual = Button(window, text="Manual", width=30, height=2, command= lambda: global_systems.changeSwitchForm("manual"))
+    ButtonManual.place(relx=0.5, rely=0.7, anchor="center")
+
     
     ButtonReturn = Button(window, text="Regresar", width=30, height=2, command= lambda: OpenMain(window))
     ButtonReturn.place(relx=0.2, rely=0.9, anchor="center")
-
-    
-    
-    # Control de música
-    #play_button = Button(window, text="Reproducir Música", width=30, height=2, command=play)
-    #play_button.place(relx=0.5, rely=0.3, anchor="center")
-
-    #stop_button = Button(window, text="Detener Música", width=30, height=2, command=stop)
-    #stop_button.place(relx=0.5, rely=0.5, anchor="center")
-
-
 
     window.mainloop()
 ##################################################################################
@@ -266,6 +252,20 @@ def SummaryWindow():
         vsIcon = MakeImage("images/vs.png")
         Label(window, image=vsIcon, width=150, height=150).place(relx=0.5, rely=0.5, anchor="center")
 
+    def vsSFX():
+        global_systems.backgroundMusic.setVolume(0.0)
+        effect = pygame.mixer.Sound("music/vs.mp3")
+        effect.set_volume(1)
+        effect.play()
+        time.sleep(5)
+        global_systems.backgroundMusic.setVolume(0.5)
+
+    
+    vs_sfx = threading.Thread(target=vsSFX)
+    vs_sfx.daemon = True
+    vs_sfx.start()
+
+
     ButtonListo = Button(window, text="Listo", width=30, height=2, command= lambda: StartCoin(window))
     ButtonListo.place(relx=0.2, rely=0.9, anchor="center")
 
@@ -306,11 +306,31 @@ def CoinWindow():
 
         global_systems.otherGuy = global_systems.OtherPlayer(global_systems.startingPlayer)
 
+        chosen_sfx = threading.Thread(target=chosenSFX)
+        chosen_sfx.daemon = True
+        chosen_sfx.start()
+
         window.update()
             
     canvas = Canvas(window, width=400, height=307, bg="#262626")
     canvas.place(relx=0.5, rely=0.5, anchor="center")
     coin = canvas.create_image(0,0, anchor="nw", image= info["character"])
+
+    def chosenSFX():
+        pygame.mixer.music.load("music/choosen.mp3")
+        pygame.mixer.music.play()
+        pygame.mixer.music.set_volume(1)
+
+
+    def monedaSFX():
+        pygame.mixer.music.load("music/moneda.mp3")
+        pygame.mixer.music.play()
+        pygame.mixer.music.set_volume(1)
+
+    moneda_sfx = threading.Thread(target=monedaSFX)
+    moneda_sfx.daemon = True
+    moneda_sfx.start()
+
     
     animacion(1)
     window.mainloop()
@@ -324,33 +344,59 @@ def game():
     window.title("Juego")
     window.configure(bg="#262626")
 
-    firstTurnPlayer = global_systems.Players[global_systems.startingPlayer] 
+    firstTurnPlayer = global_systems.Players[global_systems.startingPlayer]
+    firstTurnPlayer.setBackground("green") 
+    
     secondTurnPlayer = global_systems.Players[global_systems.otherGuy]
-
+    secondTurnPlayer.setBackground("#262626")
+    
     gameVariables = {
         "isRunning" : True,
-        "player" : firstTurnPlayer
+        "player" : firstTurnPlayer,
+        "blockPlayer" : MakeImage("images/block.png"),
+        "lock" : 0
     }
 
     def checkTurn():
-        if firstTurnPlayer.getShots() == 0:
-            gameVariables["player"] = secondTurnPlayer
+
+        if global_systems.switchForm == "manual":
+            if (gameVariables["lock"] == 1 and firstTurnPlayer.getShots() == 0):
+                firstTurnPlayer.setBackground("#262626") 
+                gameVariables["player"] = secondTurnPlayer
+                secondTurnPlayer.setBackground("green")
+            
+            elif (gameVariables["lock"] == 0 and firstTurnPlayer.getShots() == 0):
+                  firstTurnPlayer.setBackground("#262626") 
+                  gameVariables["player"] = None
+        
+        elif global_systems.switchForm == "auto":
+            if firstTurnPlayer.getShots() == 0:
+                firstTurnPlayer.setBackground("#262626") 
+                gameVariables["player"] = secondTurnPlayer
+                secondTurnPlayer.setBackground("green")
 
 
     def endGame():
         if (firstTurnPlayer.getShots() == 0 and secondTurnPlayer.getShots() == 0): 
             gameVariables["isRunning"] = False
 
+
+
     def Timer():
-        print("timer started")
-        while gameVariables["player"].getShotStatus() == True:
-            time.sleep(3)
-            if gameVariables["player"].getShotStatus() == True:
-                gameVariables["player"].setScore(5)
+            print("timer started")
+            while gameVariables["player"].getShotStatus() == True:
+                time.sleep(3)
+                if gameVariables["player"] == None:
+                    return
+                elif gameVariables["player"].getShotStatus() == True:
+                        gameVariables["player"].setScore(5)
 
+    def zoneSFX(zone):
+        pygame.mixer.music.load(f"sfx/{zone}.mp3")
+        pygame.mixer.music.play()
+        pygame.mixer.music.set_volume(1)
+    
     def action(action):
-
-        
 
         if action == "End":
             if gameVariables["player"].getShotStatus() == False:
@@ -363,6 +409,9 @@ def game():
                 gameVariables["player"].removeShots()
                 gameVariables["player"].setShotStatus(False)
 
+        elif action == "Switch":
+            gameVariables["lock"] = 1
+
         else:
             score = action.split("-")
             if gameVariables["player"].getShotStatus() == False:
@@ -372,24 +421,41 @@ def game():
                 shotTimer = threading.Thread(target=Timer)
                 shotTimer.daemon = True
                 shotTimer.start()
+
+                zone = threading.Thread(target=lambda:zoneSFX(score[0]))
+                zone.daemon = True
+                zone.start()
             
             elif gameVariables["player"].getShotStatus() == True:
                 gameVariables["player"].setScore(int(score[1]))
+                
+                zone = threading.Thread(target=lambda:zoneSFX(score[0]))
+                zone.daemon = True
+                zone.start()
 
 
     def Gameloop():
         while gameVariables["isRunning"]:
+            try:
 
-            Player1_shots['text'] = f"Tiros: {global_systems.Players[0].getShots()}"
-            Player2_shots['text'] = f"Tiros: {global_systems.Players[1].getShots()}"
+                Player1_shots['text'] = f"Tiros Restantes: {global_systems.Players[0].getShots()}"
+                Player2_shots['text'] = f"Tiros Restantes: {global_systems.Players[1].getShots()}"
 
-            Player1_score['text'] = f"Puntaje: {global_systems.Players[0].getScore()}"
-            Player2_score['text'] = f"Puntaje: {global_systems.Players[1].getScore()}"
+                Player1_missedShots['text'] = f"Tiros Fallidos: {global_systems.Players[0].getMissedShots()}"
+                Player2_missedShots['text'] = f"Tiros Fallidos: {global_systems.Players[1].getMissedShots()}"
+
+                Player1_score['text'] = f"Puntaje Total: {global_systems.Players[0].getScore()}"
+                Player2_score['text'] = f"Puntaje Total: {global_systems.Players[1].getScore()}"
+                
+                checkTurn()
+                canvas.itemconfig(Player1_background, fill=f"{global_systems.Players[0].getBackground()}")
+                canvas.itemconfig(Player2_background, fill=f"{global_systems.Players[1].getBackground()}")
+                window.update()
+                endGame()
+                time.sleep(0.06)
             
-            checkTurn()
-            window.update()
-            endGame()
-            time.sleep(0.06)
+            except ValueError:
+                return "Intercambie jugador para continuar"
 
     def checking():
         while gameVariables["isRunning"]:
@@ -406,6 +472,8 @@ def game():
     canvas = Canvas(window, width=canvas_width, height=canvas_height, bg="#262626")
     canvas.pack()
 
+
+
     # Player 1
     Player1_team = MakeImage(global_systems.Players[0].getCharacter("team"))
     Player1_character = MakeImage(global_systems.Players[0].getCharacter("image"))
@@ -418,8 +486,15 @@ def game():
     Player1_shots = Button(window, text="", width=20, height=2)
     Player1_shots.place(relx=0.25, rely=0.6, anchor="center")
 
+    Player1_missedShots = Button(window, text="", width=20, height=2)
+    Player1_missedShots.place(relx=0.25, rely=0.7, anchor="center")
+
     Player1_score = Button(window, text="", width=20, height=2)
-    Player1_score.place(relx=0.25, rely=0.7, anchor="center")
+    Player1_score.place(relx=0.25, rely=0.8, anchor="center")
+
+    Player1_background = canvas.create_rectangle(0,0,400,700, fill="#262626")
+
+
 
     
     # Player 2
@@ -434,8 +509,13 @@ def game():
     Player2_shots = Button(window, text="", width=20, height=2)
     Player2_shots.place(relx=0.75, rely=0.6, anchor="center")
 
+    Player2_missedShots = Button(window, text="", width=20, height=2)
+    Player2_missedShots.place(relx=0.75, rely=0.7, anchor="center")
+
     Player2_score = Button(window, text="", width=20, height=2)
-    Player2_score.place(relx=0.75, rely=0.7, anchor="center")
+    Player2_score.place(relx=0.75, rely=0.8, anchor="center")
+
+    Player2_background = canvas.create_rectangle(400,0,800,700, fill="#262626")
 
 
     listen = threading.Thread(target= checking)

@@ -3,6 +3,8 @@ from tkinter import *
 import pygame
 import global_systems
 import game_module
+import threading
+import musicClass
 
 
 
@@ -12,6 +14,7 @@ def OpenGame(window):
 
 def OpenGameConfig(window):
     window.destroy()
+    GameConfigWindow()
 
 def OpenAbout(window):
     window.destroy()
@@ -19,6 +22,7 @@ def OpenAbout(window):
 
 def OpenDebug(window):
     window.destroy()
+    DebugWindow()
 
 def OpenMain(window):
     window.destroy()
@@ -30,17 +34,19 @@ def OpenMain(window):
 # Sección de música
 ##################################################################################
 
-pygame.mixer.init()
+#pygame.mixer.init()
+
+global_systems.backgroundMusic = musicClass.Song()
+
 
 # Esta función inicializa la canción y luego la reproduce
 def play():
-    pygame.mixer.music.load("music/theme.wav")
-    pygame.mixer.music.play(loops=0)
-
-
+    global_systems.backgroundMusic.startSong()
+    
+    
 # Esta función detiene la música
 def stop():
-    pygame.mixer.music.stop()
+    global_systems.backgroundMusic.stopSong()
 
 
 ##################################################################################
@@ -58,7 +64,7 @@ def MainWindow():
     ButtonPlay = Button(window, text="Jugar", width=30, height=2, command= lambda: OpenGame(window))
     ButtonPlay.place(relx=0.5, rely=0.25, anchor="center")
 
-    ButtonConfig = Button(window, text="Configuración de Juego",width=30, height=2, command= lambda: OpenGameConfig(window))
+    ButtonConfig = Button(window, text="Configuración de música",width=30, height=2, command= lambda: OpenGameConfig(window))
     ButtonConfig.place(relx=0.5, rely=0.45, anchor="center")
 
     ButtonAbout = Button(window, text="About",width=30, height=2, command= lambda: OpenAbout(window))
