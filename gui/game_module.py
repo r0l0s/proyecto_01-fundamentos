@@ -10,7 +10,7 @@ import pygame
 
 pygame.mixer.init()
 
-serverAddress = ('192.168.100.7', 2222)
+serverAddress = ('192.168.100.78', 2222)
 bufferSize = 1024
 UDPClient = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
@@ -33,6 +33,11 @@ def StartCoin(window):
 def StartGame(window):
     window.destroy()
     game()
+
+def StartEnd(window):
+    window.destroy()
+    endScreen()
+    
 
 ###########################################################################################
 ###########################################################################################
@@ -103,11 +108,13 @@ def ChoosePlayer(playerindex):
     
     def player_selection():
 
-        command = "start"
-        commandEncoded = command.encode('utf-8')
-        UDPClient.sendto(commandEncoded, serverAddress)
+        
 
         while player_variables["is_running"]:
+
+            command = "sendPot"
+            commandEncoded = command.encode('utf-8')
+            UDPClient.sendto(commandEncoded, serverAddress)
 
             data,address = UDPClient.recvfrom(bufferSize)
             dataDecoded = data.decode('utf-8')
@@ -142,9 +149,6 @@ def Confirm(window, entry, jugador):
     global_systems.Players.append(player)
     window.destroy()
     ChoosePlayer(jugador-1)
-    command = "kill"
-    commandEncoded = command.encode('utf-8')
-    UDPClient.sendto(commandEncoded, serverAddress)
 
 
 
@@ -258,7 +262,7 @@ def SummaryWindow():
         effect.set_volume(1)
         effect.play()
         time.sleep(5)
-        global_systems.backgroundMusic.setVolume(0.5)
+        global_systems.backgroundMusic.setVolume(0.2)
 
     
     vs_sfx = threading.Thread(target=vsSFX)
@@ -317,15 +321,22 @@ def CoinWindow():
     coin = canvas.create_image(0,0, anchor="nw", image= info["character"])
 
     def chosenSFX():
-        pygame.mixer.music.load("music/choosen.mp3")
-        pygame.mixer.music.play()
-        pygame.mixer.music.set_volume(1)
+        global_systems.backgroundMusic.setVolume(0.0)
+        effect = pygame.mixer.Sound("music/choosen.mp3")
+        effect.set_volume(1)
+        effect.play()
+        time.sleep(5)
+        global_systems.backgroundMusic.setVolume(0.2)
 
 
     def monedaSFX():
-        pygame.mixer.music.load("music/moneda.mp3")
-        pygame.mixer.music.play()
-        pygame.mixer.music.set_volume(1)
+        global_systems.backgroundMusic.setVolume(0.0)
+        effect = pygame.mixer.Sound("music/moneda.mp3")
+        effect.set_volume(1)
+        effect.play()
+        time.sleep(5)
+        global_systems.backgroundMusic.setVolume(0.2)
+
 
     moneda_sfx = threading.Thread(target=monedaSFX)
     moneda_sfx.daemon = True
@@ -345,7 +356,12 @@ def game():
     window.configure(bg="#262626")
 
     firstTurnPlayer = global_systems.Players[global_systems.startingPlayer]
-    firstTurnPlayer.setBackground("green") 
+    firstTurnPlayer.setBackground("green")
+    
+    command = str(global_systems.startingPlayer)
+    commandEncoded = command.encode('utf-8')
+    UDPClient.sendto(commandEncoded, serverAddress)
+
     
     secondTurnPlayer = global_systems.Players[global_systems.otherGuy]
     secondTurnPlayer.setBackground("#262626")
@@ -364,6 +380,10 @@ def game():
                 firstTurnPlayer.setBackground("#262626") 
                 gameVariables["player"] = secondTurnPlayer
                 secondTurnPlayer.setBackground("green")
+                
+                command = str(global_systems.otherGuy)
+                commandEncoded = command.encode('utf-8')
+                UDPClient.sendto(commandEncoded, serverAddress)
             
             elif (gameVariables["lock"] == 0 and firstTurnPlayer.getShots() == 0):
                   firstTurnPlayer.setBackground("#262626") 
@@ -374,6 +394,10 @@ def game():
                 firstTurnPlayer.setBackground("#262626") 
                 gameVariables["player"] = secondTurnPlayer
                 secondTurnPlayer.setBackground("green")
+
+                command = str(global_systems.otherGuy)
+                commandEncoded = command.encode('utf-8')
+                UDPClient.sendto(commandEncoded, serverAddress)
 
 
     def endGame():
@@ -392,9 +416,9 @@ def game():
                         gameVariables["player"].setScore(5)
 
     def zoneSFX(zone):
-        pygame.mixer.music.load(f"sfx/{zone}.mp3")
-        pygame.mixer.music.play()
-        pygame.mixer.music.set_volume(1)
+        effect = pygame.mixer.Sound(f"sfx/{zone}.mp3")
+        effect.set_volume(1)
+        effect.play()
     
     def action(action):
 
@@ -412,8 +436,12 @@ def game():
         elif action == "Switch":
             gameVariables["lock"] = 1
 
+        elif action == "null":
+            pass
+
         else:
             score = action.split("-")
+
             if gameVariables["player"].getShotStatus() == False:
                 gameVariables["player"].setShotStatus(True)
                 gameVariables["player"].setScore(int(score[1]))
@@ -456,16 +484,46 @@ def game():
             
             except ValueError:
                 return "Intercambie jugador para continuar"
+            
+        StartEnd()
 
     def checking():
         while gameVariables["isRunning"]:
-            print("yup")
-            
-            data,address = UDPClient.recvfrom(bufferSize)
-            dataDecoded = data.decode('utf-8')
-            print(dataDecoded)
-            action(dataDecoded)
 
+            if global_systems.switchForm == "auto":
+                
+                command = "sendZone"
+                commandEncoded = command.encode('utf-8')
+                UDPClient.sendto(commandEncoded, serverAddress)
+                
+                data,address = UDPClient.recvfrom(bufferSize)
+                dataDecoded = data.decode('utf-8')
+                print(dataDecoded)
+                action(dataDecoded)
+
+            elif global_systems.switchForm == "manual":
+            
+                if gameVariables["player"].getShots()!=0:
+                    command = "sendZone"
+                    commandEncoded = command.encode('utf-8')
+                    UDPClient.sendto(commandEncoded, serverAddress)
+                    
+                    data,address = UDPClient.recvfrom(bufferSize)
+                    dataDecoded = data.decode('utf-8')
+                    print(dataDecoded)
+                    action(dataDecoded)
+
+                else:
+                    command = "needSwitch"
+                    commandEncoded = command.encode('utf-8')
+                    UDPClient.sendto(commandEncoded, serverAddress)
+                    
+                    data,address = UDPClient.recvfrom(bufferSize)
+                    dataDecoded = data.decode('utf-8')
+                    print(dataDecoded)
+                    action(dataDecoded)
+
+            time.sleep(0.1)
 
 
     canvas_width, canvas_height = 800, 700
@@ -523,4 +581,86 @@ def game():
     listen.start()
 
     Gameloop()
+    window.mainloop()
+
+
+    ##################################################################################
+    ##################################################################################
+
+def endScreen():
+        
+    window = Tk()
+    window.minsize(width= 800, height=700)
+    window.title("Juego")
+    window.configure(bg="#262626")
+
+
+    canvas_width, canvas_height = 800, 700
+    canvas = Canvas(window, width=canvas_width, height=canvas_height, bg="#262626")
+    canvas.pack()
+
+
+
+    def ganador():
+
+        if global_systems.Players[0].getScore() > global_systems.Players[1].getScore():
+            canvas.itemconfig(Player1_background, fill="yellow")
+            Player1_end['text'] = "GANADOR!!!!"
+            Player2_end['text'] = ":("
+        
+        elif global_systems.Players[1].getScore() > global_systems.Players[0].getScore():
+            canvas.itemconfig(Player2_background, fill="yellow")
+            Player2_end['text'] = "GANADOR!!!!"
+            Player1_end['text'] = ":("
+        
+        Player1_score['text'] = f"Puntaje Total: {global_systems.Players[0].getScore()}"
+        Player2_score['text'] = f"Puntaje Total: {global_systems.Players[1].getScore()}"
+
+        command = "kill"
+        commandEncoded = command.encode('utf-8')
+        UDPClient.sendto(commandEncoded, serverAddress)
+
+
+
+    # Player 1
+    Player1_team = MakeImage(global_systems.Players[0].getCharacter("team"))
+    Player1_character = MakeImage(global_systems.Players[0].getCharacter("image"))
+    Label(window, image=Player1_team, width=150, height=150).place(relx=0.25, rely=0.2, anchor="center")
+    Label(window, image=Player1_character, width=150, height=150).place(relx=0.25, rely=0.35, anchor="center")
+
+    Player1_name = Button(window, text=f"{global_systems.Players[0].getPlayerName()}", width=20, height=2)
+    Player1_name.place(relx=0.25, rely=0.5, anchor="center")
+
+    Player1_score = Button(window, text="", width=20, height=2)
+    Player1_score.place(relx=0.25, rely=0.6, anchor="center")
+
+    Player1_end = Button(window, text="", width=20, height=2)
+    Player1_end.place(relx=0.25, rely=0.7, anchor="center")
+
+
+    Player1_background = canvas.create_rectangle(0,0,400,700, fill="#262626")
+
+
+
+    
+    # Player 2
+    Player2_team = MakeImage(global_systems.Players[1].getCharacter("team"))
+    Player2_character = MakeImage(global_systems.Players[1].getCharacter("image"))
+    Label(window, image=Player2_team, width=150, height=150).place(relx=0.75, rely=0.2, anchor="center")
+    Label(window, image=Player2_character, width=150, height=150).place(relx=0.75, rely=0.35, anchor="center")
+
+    Player2_name = Button(window, text=f"{global_systems.Players[1].getPlayerName()}", width=20, height=2)
+    Player2_name.place(relx=0.75, rely=0.5, anchor="center")
+
+    Player2_score = Button(window, text="", width=20, height=2)
+    Player2_score.place(relx=0.75, rely=0.6, anchor="center")
+
+    Player2_end = Button(window, text="", width=20, height=2)
+    Player2_end.place(relx=0.75, rely=0.7, anchor="center")
+    
+    Player2_background = canvas.create_rectangle(400,0,800,700, fill="#262626")
+
+    ganador()
+
+
     window.mainloop()

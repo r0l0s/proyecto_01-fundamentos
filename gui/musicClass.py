@@ -8,7 +8,7 @@ class Song:
          pygame.mixer.music.load("music/theme.mp3")
 
     def startSong(self):
-        pygame.mixer.music.set_volume(0.5)
+        pygame.mixer.music.set_volume(0.2)
         pygame.mixer.music.play()
 
 
